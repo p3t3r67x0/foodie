@@ -1,2 +1,3 @@
-# foodie
-A service which will be placed in town to deliver local food, snack, drinks and stuff
+# foodieFox
+
+Food and drinks delivery made easy, with foodieFox you support your locals
