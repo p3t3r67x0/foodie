@@ -5,6 +5,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi_users import FastAPIUsers
 from fastapi_users.db import MongoDBUserDatabase
+from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from config import settings
 
@@ -14,6 +15,14 @@ from apps.user.routers import get_users_router
 from apps.market.routers import get_market_router
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=['*'],
+    allow_methods=['*'],
+    allow_headers=['*']
+)
 
 
 @app.on_event('startup')
@@ -35,8 +44,8 @@ async def configure_db_and_routes():
         UserDB,
     )
 
-    app.include_router(get_users_router(app))
-    app.include_router(get_market_router(app))
+    app.include_router(get_users_router(app), prefix='/account',)
+    app.include_router(get_market_router(app), prefix='/markets',)
 
 
 @app.on_event('shutdown')

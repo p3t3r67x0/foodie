@@ -16,23 +16,24 @@ def get_market_router(app):
         raise HTTPException(status_code=404, detail=f'Market {id} not found')
 
 
-    @router.get('/', response_description='List all markets')
-    async def list_markets(request: Request):
-        latitude = 53.67515
-        longitude = 10.22593
+    @router.get('/{lat}/{lng}', response_description='List near markets')
+    async def list_markets(lat: float, lng: float, request: Request):
         distance = 4000
 
-        query = {'loc': {'$nearSphere': {'$geometry': {'type': 'Point', 'coordinates': [latitude, longitude] }, '$maxDistance': distance}}}
+        query = {'loc': {'$nearSphere': {'$geometry': {'type': 'Point', 'coordinates': [lat, lng] }, '$maxDistance': distance}}}
         filter = {'_id': False}
 
-        docs = request.app.db['markets'].find(query, filter).to_list(length=10000)
+        docs = request.app.db['markets'].find(query, filter).to_list(length=10)
 
         markets = []
 
         for doc in await docs:
             id = {'id': doc['id']}
             wawi = {'wawi': doc['wawi']}
-            markets.append({**doc['address'], **wawi, **id})
+            headline = {'headline': doc['headline']}
+            coordinates = {'coordinates': doc['loc']['coordinates']}
+
+            markets.append({**doc['address'], **headline, **coordinates, **wawi, **id})
 
         return markets
 
