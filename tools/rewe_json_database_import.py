@@ -36,7 +36,7 @@ def insert_spatial_data(db, data):
 
 if __name__ == '__main__':
     db = connect_database()
-    db['markets'].create_index([('id', DESCENDING), ('wawi', ASCENDING)])
+    db['markets'].create_index([('id', ASCENDING), ('wawi', ASCENDING)], unique=True)
     db['markets'].create_index([('loc', GEOSPHERE)])
 
     with open('rewe_discounter_details.json', 'r') as f:
