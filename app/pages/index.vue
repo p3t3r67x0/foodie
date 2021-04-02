@@ -112,6 +112,8 @@ export default {
         validateStatus: () => true
       }).then((res) => {
         if (res.status === 200) {
+          const vm = this
+
           const redIcon = new this.$L.Icon({
             iconUrl: '/marker-icon-2x-red.png',
             shadowUrl: '/marker-shadow.png',
@@ -123,12 +125,11 @@ export default {
           })
 
           const marketMarkers = new this.$L.featureGroup()
-          this.mapLayer.addLayer(marketMarkers)
+          vm.mapLayer.addLayer(marketMarkers)
 
           res.data.forEach((item) => {
-            const vm = this
 
-            this.$L.marker([item['coordinates'][0], item['coordinates'][1]], {
+            vm.$L.marker([item['coordinates'][0], item['coordinates'][1]], {
                 icon: redIcon
               })
               .on('click', function(e) {
@@ -139,12 +140,12 @@ export default {
           })
 
           setTimeout(function() {
-            this.mapLayer.invalidateSize()
+            vm.mapLayer.invalidateSize()
           }, 800)
 
-          this.mapLayer.fitBounds(marketMarkers.getBounds())
+          vm.mapLayer.fitBounds(marketMarkers.getBounds())
 
-          this.markets = res.data
+          vm.markets = res.data
         } else {
           alert('Entschuldigung keine Märkte gefunden')
         }
