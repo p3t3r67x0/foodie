@@ -52,35 +52,59 @@
 export default {
   data() {
     return {
-      position: {
-        lat: 53.6623,
-        lng: 10.6970
+      map: {},
+      redIcon: null,
+      featureGroup: {},
+      redIconOptions: {
+        iconUrl: '/marker-icon-2x-red.png',
+        shadowUrl: '/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [15, -27],
+        shadowSize: [41, 41]
       },
       geolocationOptions: {
         timeout: 6000,
         enableHighAccuracy: false,
         maximumAge: 0
       },
-      markets: [],
       selectedMarket: null,
-      userLocation: {},
-      mapLayer: {}
+      markets: []
     }
   },
-  mounted() {
-    this.getUserPosition()
+  async mounted() {
+    this.featureGroup = L.featureGroup()
+    this.redIcon = L.icon(this.redIconOptions)
 
-    const tileLayer = this.$L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd'
-    })
-
-    this.mapLayer = this.$L.map('map', {
-      layers: [tileLayer],
-      minZoom: 6
-    }).setView([52.520007, 13.404954], 12)
+    await this.initMap()
+    await this.getPosition()
   },
   methods: {
+    initMap() {
+      this.map = L.map('map').setView([53.570007, 10.0104954], 14)
+      this.tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd'
+      })
+      this.tileLayer.addTo(this.map)
+    },
+    setupMarkers() {
+      this.markets.forEach(item => {
+        const marker = L.marker([item['coordinates'][0], item['coordinates'][1]], {
+          icon: this.redIcon
+        })
+
+        marker.on('click', function(e) {
+          this.selectMarketByMarker(e, item)
+        })
+
+        this.featureGroup.addLayer(marker)
+      })
+
+      this.featureGroup.addTo(this.map)
+      this.map.fitBounds(this.featureGroup.getBounds())
+    },
     selectMarket(market) {
       this.selectedMarket = market
     },
@@ -90,70 +114,25 @@ export default {
     submitAddress(e) {
       console.log(e.target.value)
     },
-    getUserPosition() {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(this.successGeolocation, this.errorGeolocation, this.geolocationOptions)
-      } else {
-        alert('Bitte GPS und Standort freigeben')
-      }
+    async getPosition() {
+      await this.$geolocation.getCurrentPosition().then(pos => {
+        const url = `${this.$config.apiUrl}/markets/${pos.coords.latitude}/${pos.coords.longitude}`
+
+        const marker = L.marker([pos.coords.latitude, pos.coords.longitude], {
+          title: 'Mein Standort'
+        })
+
+        this.$axios.$get(url).then(res => {
+          this.markets = res
+          this.featureGroup.addLayer(marker)
+          this.setupMarkers()
+        })
+      }).catch(err => {
+        alert(err.name)
+      })
     },
     errorGeolocation(err) {
-      console.log(`ERROR(${err.code}): ${err.message}`)
-    },
-    successGeolocation(pos) {
-      this.userLocation = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude
-      }
-
-      this.$axios({
-        method: 'GET',
-        url: `${this.$config.apiUrl}/markets/${pos.coords.latitude}/${pos.coords.longitude}`,
-        validateStatus: () => true
-      }).then((res) => {
-        if (res.status === 200) {
-          const vm = this
-
-          const redIcon = new this.$L.Icon({
-            iconUrl: '/marker-icon-2x-red.png',
-            shadowUrl: '/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            tooltipAnchor: [15, -27],
-            shadowSize: [41, 41]
-          })
-
-          const marketMarkers = new this.$L.featureGroup()
-          vm.mapLayer.addLayer(marketMarkers)
-
-          res.data.forEach((item) => {
-
-            vm.$L.marker([item['coordinates'][0], item['coordinates'][1]], {
-                icon: redIcon
-              })
-              .on('click', function(e) {
-                vm.selectMarketByMarker(e, item)
-              })
-              .bindTooltip(`${item['headline']}, ${item['streetWithNumber']}`)
-              .addTo(marketMarkers)
-          })
-
-          setTimeout(function() {
-            vm.mapLayer.invalidateSize()
-          }, 800)
-
-          vm.mapLayer.fitBounds(marketMarkers.getBounds())
-
-          vm.markets = res.data
-        } else {
-          alert('Entschuldigung keine Märkte gefunden')
-        }
-      })
-
-      this.$L.marker([pos.coords.latitude, pos.coords.longitude], {
-        title: 'Mein Standort'
-      }).addTo(this.mapLayer)
+      alert(`ERROR ${err.code}, ${err.message}`)
     }
   }
 }
