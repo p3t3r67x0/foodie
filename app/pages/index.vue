@@ -30,14 +30,14 @@
         </ul>
       </div>
 
-      <div v-if="markets.length > 0 && !selectedMarket" class="mt-8">
+      <div v-if="marketsList.length > 0" class="mt-8">
         <h3 class="text-white mb-3">
-          <span class="font-bold">{{ markets.length }}</span>
+          <span class="font-bold">{{ marketsList.length }}</span>
           <span class="font-medium">Märkte gefunden</span>
         </h3>
 
         <ul class="font-mono text-white">
-          <li v-for="market in markets" class="mb-1">
+          <li v-for="market of marketsList" class="mb-1">
             <span>-</span>
             <p @click="selectMarket(market['streetWithNumber'])" class="cursor-pointer inline-block hover:bg-white focus:bg-white er:bg-white hover:text-pink-600 focus:text-pink-600 hover:px-1 focus:px-1">{{ market['streetWithNumber'] }}</p>
           </li>
@@ -54,6 +54,9 @@ export default {
     return {
       map: {},
       redIcon: null,
+      selectedMarket: null,
+      markets: new Set(),
+      marketsList: [],
       featureGroup: {},
       redIconOptions: {
         iconUrl: '/marker-icon-2x-red.png',
@@ -68,66 +71,71 @@ export default {
         timeout: 6000,
         enableHighAccuracy: false,
         maximumAge: 0
-      },
-      selectedMarket: null,
-      markets: []
+      }
     }
   },
   async mounted() {
-    this.featureGroup = this.$L.featureGroup()
-    this.redIcon = this.$L.icon(this.redIconOptions)
-
     await this.initMap()
-    await this.getPosition()
   },
   methods: {
-    initMap() {
+    async initMap() {
       this.map = this.$L.map('map').setView([53.570007, 10.0104954], 14)
+
       this.tileLayer = this.$L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd'
       })
+
+      this.redIcon = this.$L.icon(this.redIconOptions)
+      this.featureGroup = this.$L.featureGroup().addTo(this.map)
       this.tileLayer.addTo(this.map)
+
+      await this.getPosition()
     },
-    setupMarkers() {
-      this.markets.forEach(item => {
+    addMarkers(res) {
+      res.forEach((item, i) => {
+        this.markets.add(item)
+
         const marker = this.$L.marker([item['coordinates'][0], item['coordinates'][1]], {
           icon: this.redIcon
         })
 
-        marker.on('click', function(e) {
-          this.selectMarketByMarker(e, item)
+        marker.on('click', (e) => {
+          this.selectMarket(item['streetWithNumber'])
+          this.map.fitBounds(this.$L.latLngBounds([e.latlng]))
+          e.preventDefault
         })
 
-        this.featureGroup.addLayer(marker)
-      })
+        marker.addTo(this.featureGroup)
 
-      this.featureGroup.addTo(this.map)
-      this.map.fitBounds(this.featureGroup.getBounds())
+        if (i === res.length - 1) {
+          this.map.fitBounds(this.featureGroup.getBounds())
+          this.marketsList = Array.from(this.markets)
+        }
+      })
     },
-    selectMarket(market) {
-      this.selectedMarket = market
-    },
-    selectMarketByMarker(e, item) {
-      this.selectMarket(item['streetWithNumber'])
+    selectMarket(marketAddress) {
+      this.selectedMarket = marketAddress
     },
     submitAddress(e) {
       console.log(e.target.value)
     },
     async getPosition() {
-      await this.$geolocation.getCurrentPosition().then(pos => {
+      await this.$geolocation.getCurrentPosition().then((pos) => {
         const url = `${this.$config.apiUrl}/markets/${pos.coords.latitude}/${pos.coords.longitude}`
 
         const marker = this.$L.marker([pos.coords.latitude, pos.coords.longitude], {
           title: 'Mein Standort'
         })
 
-        this.$axios.$get(url).then(res => {
-          this.markets = res
-          this.featureGroup.addLayer(marker)
-          this.setupMarkers()
+        marker.addTo(this.featureGroup)
+
+        this.$axios.$get(url).then((res) => {
+          this.addMarkers(res)
+        }).catch((err) => {
+          alert(err)
         })
-      }).catch(err => {
+      }).catch((err) => {
         alert(err.name)
       })
     },
