@@ -74,16 +74,16 @@ export default {
     }
   },
   async mounted() {
-    this.featureGroup = L.featureGroup()
-    this.redIcon = L.icon(this.redIconOptions)
+    this.featureGroup = this.$L.featureGroup()
+    this.redIcon = this.$L.icon(this.redIconOptions)
 
     await this.initMap()
     await this.getPosition()
   },
   methods: {
     initMap() {
-      this.map = L.map('map').setView([53.570007, 10.0104954], 14)
-      this.tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      this.map = this.$L.map('map').setView([53.570007, 10.0104954], 14)
+      this.tileLayer = this.$L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd'
       })
@@ -91,7 +91,7 @@ export default {
     },
     setupMarkers() {
       this.markets.forEach(item => {
-        const marker = L.marker([item['coordinates'][0], item['coordinates'][1]], {
+        const marker = this.$L.marker([item['coordinates'][0], item['coordinates'][1]], {
           icon: this.redIcon
         })
 
@@ -118,7 +118,7 @@ export default {
       await this.$geolocation.getCurrentPosition().then(pos => {
         const url = `${this.$config.apiUrl}/markets/${pos.coords.latitude}/${pos.coords.longitude}`
 
-        const marker = L.marker([pos.coords.latitude, pos.coords.longitude], {
+        const marker = this.$L.marker([pos.coords.latitude, pos.coords.longitude], {
           title: 'Mein Standort'
         })
 
