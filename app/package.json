@@ -11,8 +11,8 @@
   "dependencies": {
     "@nuxtjs/axios": "^5.13.1",
     "core-js": "^3.9.1",
-    "leaflet": "^1.7.1",
     "nuxt": "^2.15.3",
+    "nuxt-leaflet": "0.0.25",
     "vue-geolocation-api": "^0.1.21"
   },
   "devDependencies": {

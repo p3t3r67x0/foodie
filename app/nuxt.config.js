@@ -26,13 +26,10 @@ export default {
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
-  css: ['leaflet/dist/leaflet.css'],
+  css: [],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: [{
-    src: '~plugins/vue-leaflet.js',
-    ssr: false
-  }],
+  plugins: [],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -47,7 +44,8 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
-    'vue-geolocation-api/nuxt'
+    'vue-geolocation-api/nuxt',
+    'nuxt-leaflet'
   ],
 
   axios: {},
