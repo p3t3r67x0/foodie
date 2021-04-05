@@ -30,16 +30,9 @@ def get_market_router(app):
         markets = []
 
         for doc in await docs:
-            print(doc)
-
             id = {'id': doc['id']}
 
             discounter = {'discounter': doc['discounter']}
-
-            if 'wawi' in doc:
-                wawi = {'wawi': doc['wawi']}
-            else:
-                wawi = {'wawi': ''}
 
             if 'headline' in doc:
                 headline = {'headline': doc['headline']}
@@ -71,7 +64,7 @@ def get_market_router(app):
 
             coordinates = {'coordinates': doc['loc']['coordinates']}
 
-            markets.append({**address, **discounter, **headline, **coordinates, **wawi, **id})
+            markets.append({**address, **discounter, **headline, **coordinates, **id})
 
         return markets
 
