@@ -1,3 +1,5 @@
+import re
+
 from fastapi import APIRouter, Body, Request, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -23,17 +25,53 @@ def get_market_router(app):
         query = {'loc': {'$nearSphere': {'$geometry': {'type': 'Point', 'coordinates': [lat, lng] }, '$maxDistance': distance}}}
         filter = {'_id': False}
 
-        docs = request.app.db['markets'].find(query, filter).to_list(length=10)
+        docs = request.app.db['markets'].find(query, filter).to_list(length=9)
 
         markets = []
 
         for doc in await docs:
+            print(doc)
+
             id = {'id': doc['id']}
-            wawi = {'wawi': doc['wawi']}
-            headline = {'headline': doc['headline']}
+
+            discounter = {'discounter': doc['discounter']}
+
+            if 'wawi' in doc:
+                wawi = {'wawi': doc['wawi']}
+            else:
+                wawi = {'wawi': ''}
+
+            if 'headline' in doc:
+                headline = {'headline': doc['headline']}
+            else:
+                headline = {'headline': ''}
+
+            if isinstance(doc['address'], dict):
+                address = doc['address']
+            else:
+                street_pattern = r'^[^\s][a-zA-Zäöü]+(?:[\s]{1})(?:[a-zA-Zäöü\.]+)'
+                city_pattern = r'[a-zA-Zäöü]+(?:[\s]{1})(?:[a-zA-Zäöü\.]+)$'
+
+                street = re.findall(street_pattern, doc['address'])
+                house_number = re.findall(r'([\d-]+),', doc['address'])
+                postal_code = re.findall(r'([\d]{5})', doc['address'])
+                city = re.findall(city_pattern, doc['address'])
+
+                address = {
+                    'city': city[0],
+                    'street': street[0],
+                    'postalCode': postal_code[0],
+                    'streetWithNumber': f'{street[0]} {house_number[0]}',
+                    'houseNumber': house_number[0]
+                }
+
+                del doc['address']
+                del doc['street']
+                del doc['city']
+
             coordinates = {'coordinates': doc['loc']['coordinates']}
 
-            markets.append({**doc['address'], **headline, **coordinates, **wawi, **id})
+            markets.append({**address, **discounter, **headline, **coordinates, **wawi, **id})
 
         return markets
 

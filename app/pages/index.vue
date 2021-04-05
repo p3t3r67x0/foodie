@@ -42,11 +42,21 @@ export default {
     return {
       map: {},
       redIcon: {},
+      goldIcon: {},
       marketAddress: '',
       marketsList: [],
       featureGroup: {},
       redIconOptions: {
         iconUrl: '/marker-icon-2x-red.png',
+        shadowUrl: '/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [15, -27],
+        shadowSize: [41, 41]
+      },
+      goldIconOptions: {
+        iconUrl: '/marker-icon-2x-gold.png',
         shadowUrl: '/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -74,6 +84,7 @@ export default {
       })
 
       this.redIcon = this.$L.icon(this.redIconOptions)
+      this.goldIcon = this.$L.icon(this.goldIconOptions)
       this.tileLayer.addTo(this.map)
       this.featureGroup = this.$L.featureGroup().addTo(this.map)
 
@@ -82,7 +93,7 @@ export default {
     addMarkers(res) {
       res.forEach((item, i) => {
         const marker = this.$L.marker([item['coordinates'][0], item['coordinates'][1]], {
-          icon: this.redIcon
+          icon: item['discounter'] === 'rewe' ? this.redIcon : this.goldIcon
         })
 
         marker.on('click', (e) => {
@@ -120,14 +131,14 @@ export default {
           this.marketsList = res
           this.addMarkers(res)
         }).catch(err => {
-          alert(err)
+          alert(`axios error ${err.message}`)
         })
       }).catch((err) => {
-        alert(err.name)
+        alert(`geolocation accepted with error ${err.name}`)
       })
     },
     errorGeolocation(err) {
-      alert(`ERROR ${err.code}, ${err.message}`)
+      alert(`geolocation error ${err.code}, ${err.message}`)
     }
   }
 }
