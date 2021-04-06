@@ -20,7 +20,7 @@ def get_market_router(app):
 
     @router.get('/{lat}/{lng}', response_description='List near markets')
     async def list_markets(lat: float, lng: float, request: Request):
-        distance = 4000
+        distance = 15000
 
         query = {'loc': {'$nearSphere': {'$geometry': {'type': 'Point', 'coordinates': [lat, lng] }, '$maxDistance': distance}}}
         filter = {'_id': False}
@@ -42,7 +42,7 @@ def get_market_router(app):
                 }
 
                 if 'street' not in doc:
-                    street_pattern = r'^[^\s][a-zA-Zäöü]+(?:[\s]{1})(?:[a-zA-Zäöü\.]+)'
+                    street_pattern = r'^[^\s][a-zA-ZäöüÄÖÜß]+[\s]{1}[a-zA-ZäöüÄÖÜß\.]+'
                     street = re.findall(street_pattern, doc['streetWithNumber'])
                     address['street'] = street[0]
                 else:
