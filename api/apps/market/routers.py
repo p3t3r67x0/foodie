@@ -30,41 +30,40 @@ def get_market_router(app):
         markets = []
 
         for doc in await docs:
-            id = {'id': doc['id']}
-
             discounter = {'discounter': doc['discounter']}
 
-            if 'headline' in doc:
-                headline = {'headline': doc['headline']}
-            else:
-                headline = {'headline': ''}
-
-            if isinstance(doc['address'], dict):
+            if 'address' in doc and isinstance(doc['address'], dict):
                 address = doc['address']
             else:
-                street_pattern = r'^[^\s][a-zA-Zäöü]+(?:[\s]{1})(?:[a-zA-Zäöü\.]+)'
-                city_pattern = r'[a-zA-Zäöü]+(?:[\s]{1})(?:[a-zA-Zäöü\.]+)$'
-
-                street = re.findall(street_pattern, doc['address'])
-                house_number = re.findall(r'([\d-]+),', doc['address'])
-                postal_code = re.findall(r'([\d]{5})', doc['address'])
-                city = re.findall(city_pattern, doc['address'])
-
                 address = {
-                    'city': city[0],
-                    'street': street[0],
-                    'postalCode': postal_code[0],
-                    'streetWithNumber': f'{street[0]} {house_number[0]}',
-                    'houseNumber': house_number[0]
+                    'city': doc['city'],
+                    'postalCode': doc['postalCode'],
+                    'streetWithNumber': doc['streetWithNumber']
                 }
 
-                del doc['address']
-                del doc['street']
+                if 'street' not in doc:
+                    street_pattern = r'^[^\s][a-zA-Zäöü]+(?:[\s]{1})(?:[a-zA-Zäöü\.]+)'
+                    street = re.findall(street_pattern, doc['streetWithNumber'])
+                    address['street'] = street[0]
+                else:
+                    address['street'] = doc['street']
+                    del doc['street']
+
+                if 'houseNumber' not in doc:
+                    number_pattern = r'[0-9]+|[0-9\/]+[0-9]+,'
+                    house_number = re.findall(number_pattern, doc['streetWithNumber'])
+                    address['houseNumber'] = house_number[0]
+                else:
+                    address['houseNumber'] = doc['houseNumber']
+                    del doc['houseNumber']
+
                 del doc['city']
+                del doc['streetWithNumber']
+                del doc['postalCode']
 
             coordinates = {'coordinates': doc['loc']['coordinates']}
 
-            markets.append({**address, **discounter, **headline, **coordinates, **id})
+            markets.append({**address, **discounter, **coordinates})
 
         return markets
 

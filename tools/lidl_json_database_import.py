@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-
+import re
 import json
 
 from pymongo import MongoClient, GEOSPHERE, DESCENDING, ASCENDING
@@ -14,17 +14,19 @@ def connect_database():
 
 
 def insert_spatial_data(db, data):
-    print(data)
+    data['discounter'] = 'lidl'
+    data['city'] = data['city'].strip()
 
-    lat = data['coordinates']['lat']
-    lng = data['coordinates']['lng']
+    lat = data['latitude']
+    lng = data['longitude']
 
-    del data['coordinates']
+    del data['latitude']
+    del data['longitude']
 
     if lat is None or lng is None:
-        geo_data = {}
-    else:
-        geo_data = {'loc': {'type': 'Point', 'coordinates': [lat, lng]}}
+        return
+
+    geo_data = {'loc': {'type': 'Point', 'coordinates': [lat, lng]}}
 
     merged_data = {**data, **geo_data}
 
@@ -36,11 +38,11 @@ def insert_spatial_data(db, data):
 
 if __name__ == '__main__':
     db = connect_database()
-    db['markets'].create_index([('id', ASCENDING)], unique=True)
-    db['markets'].create_index([('id', ASCENDING), ('wawi', ASCENDING)], unique=True)
+    db['markets'].create_index([('id', ASCENDING), ('wawi', ASCENDING)], unique=True, partialFilterExpression={'id': {'$type': 'number'}, 'wawi': {'$type': 'string'}})
+    db['markets'].create_index([('discounter', ASCENDING), ('streetWithNumber', ASCENDING)], unique=True)
     db['markets'].create_index([('loc', GEOSPHERE)])
 
-    with open('lidl_discounter_details.json', 'r') as f:
+    with open('lidl_merged_sorted.json', 'r') as f:
         data = f.read()
         entries = json.loads(data)
 
