@@ -43,6 +43,8 @@ export default {
       map: {},
       redIcon: {},
       goldIcon: {},
+      greenIcon: {},
+      blueIcon: {},
       marketAddress: '',
       marketsList: [],
       featureGroup: {},
@@ -57,6 +59,24 @@ export default {
       },
       goldIconOptions: {
         iconUrl: '/marker-icon-2x-gold.png',
+        shadowUrl: '/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [15, -27],
+        shadowSize: [41, 41]
+      },
+      greenIconOptions: {
+        iconUrl: '/marker-icon-2x-green.png',
+        shadowUrl: '/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [15, -27],
+        shadowSize: [41, 41]
+      },
+      blueIconOptions: {
+        iconUrl: '/marker-icon-2x-blue.png',
         shadowUrl: '/marker-shadow.png',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -85,6 +105,9 @@ export default {
 
       this.redIcon = this.$L.icon(this.redIconOptions)
       this.goldIcon = this.$L.icon(this.goldIconOptions)
+      this.greenIcon = this.$L.icon(this.greenIconOptions)
+      this.blueIcon = this.$L.icon(this.blueIconOptions)
+
       this.tileLayer.addTo(this.map)
       this.featureGroup = this.$L.featureGroup().addTo(this.map)
 
@@ -92,8 +115,18 @@ export default {
     },
     addMarkers(res) {
       res.forEach((item, i) => {
+        let icon = {}
+
+        if (item['discounter'] === 'rewe') {
+          icon = this.redIcon
+        } else if (item['discounter'] === 'edeka') {
+          icon = this.blueIcon
+        } else if (item['discounter'] === 'lidl') {
+          icon = this.goldIcon
+        }
+
         const marker = this.$L.marker([item['coordinates'][0], item['coordinates'][1]], {
-          icon: item['discounter'] === 'rewe' ? this.redIcon : this.goldIcon
+          icon: icon
         })
 
         marker.on('click', (e) => {
@@ -101,6 +134,8 @@ export default {
           this.map.fitBounds(this.$L.latLngBounds([e.latlng]))
           e.preventDefault
         })
+
+        marker.bindTooltip(item['discounter'].toUpperCase())
 
         marker.addTo(this.featureGroup)
 
@@ -118,7 +153,8 @@ export default {
     getPosition() {
       this.$geolocation.getCurrentPosition().then((pos) => {
         const marker = this.$L.marker([pos.coords.latitude, pos.coords.longitude], {
-          title: 'Mein Standort'
+          title: 'Mein Standort',
+          icon: this.greenIcon
         })
 
         marker.addTo(this.featureGroup)
