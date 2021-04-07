@@ -44,6 +44,7 @@ export default {
       redIcon: {},
       goldIcon: {},
       greenIcon: {},
+      orangeIcon: {},
       blueIcon: {},
       marketAddress: '',
       marketsList: [],
@@ -84,6 +85,15 @@ export default {
         tooltipAnchor: [15, -27],
         shadowSize: [41, 41]
       },
+      orangeIconOptions: {
+        iconUrl: '/marker-icon-2x-orange.png',
+        shadowUrl: '/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [15, -27],
+        shadowSize: [41, 41]
+      },
       geolocationOptions: {
         timeout: 6000,
         enableHighAccuracy: false,
@@ -105,6 +115,7 @@ export default {
 
       this.redIcon = this.$L.icon(this.redIconOptions)
       this.goldIcon = this.$L.icon(this.goldIconOptions)
+      this.orangeIcon = this.$L.icon(this.orangeIconOptions)
       this.greenIcon = this.$L.icon(this.greenIconOptions)
       this.blueIcon = this.$L.icon(this.blueIconOptions)
 
@@ -121,6 +132,8 @@ export default {
           icon = this.redIcon
         } else if (item['discounter'] === 'edeka') {
           icon = this.blueIcon
+        } else if (item['discounter'] === 'penny') {
+          icon = this.orangeIcon
         } else if (item['discounter'] === 'lidl') {
           icon = this.goldIcon
         }
