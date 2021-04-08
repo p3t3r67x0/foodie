@@ -45,10 +45,20 @@ export default {
       goldIcon: {},
       greenIcon: {},
       orangeIcon: {},
+      violetIcon: {},
       blueIcon: {},
       marketAddress: '',
       marketsList: [],
       featureGroup: {},
+      violetIconOptions: {
+        iconUrl: '/marker-icon-2x-violet.png',
+        shadowUrl: '/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        tooltipAnchor: [15, -27],
+        shadowSize: [41, 41]
+      },
       redIconOptions: {
         iconUrl: '/marker-icon-2x-red.png',
         shadowUrl: '/marker-shadow.png',
@@ -116,6 +126,7 @@ export default {
       this.redIcon = this.$L.icon(this.redIconOptions)
       this.goldIcon = this.$L.icon(this.goldIconOptions)
       this.orangeIcon = this.$L.icon(this.orangeIconOptions)
+      this.violetIcon = this.$L.icon(this.violetIconOptions)
       this.greenIcon = this.$L.icon(this.greenIconOptions)
       this.blueIcon = this.$L.icon(this.blueIconOptions)
 
@@ -134,6 +145,8 @@ export default {
           icon = this.blueIcon
         } else if (item['discounter'] === 'penny') {
           icon = this.orangeIcon
+        } else if (item['discounter'] === 'aldi nord') {
+          icon = this.violetIcon
         } else if (item['discounter'] === 'lidl') {
           icon = this.goldIcon
         }
