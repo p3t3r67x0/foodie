@@ -1,10 +1,10 @@
 <template>
-<div class="flex max-h-screen overflow-hidden">
-  <div class="relative flex-5 flex w-full lg:w-9/12 xl:w-10/12 h-screen">
+<div class="flex flex-col md:flex-row max-h-screen overflow-hidden">
+  <div class="relative flex-none md:flex-5 flex w-full md:w-7/12 lg:w-8/12 xl:w-10/12 h-96 md:h-screen">
     <div id="map" class="flex-1"></div>
   </div>
 
-  <div class="flex-5 lg:w-3/12 xl:w-2/12 bg-gray-700 overflow-y-auto p-3">
+  <div class="flex-1 md:flex-5 w-full md:w-5/12 lg:w-4/12 xl:w-2/12 bg-gray-700 overflow-y-auto p-3">
     <h1 class="md:text-3xl uppercase tracking-widest mb-1">
       <span class="bg-pink-600 text-white font-medium px-1 mr-1">Foodie</span><span class="text-white font-black">fox</span>
     </h1>
