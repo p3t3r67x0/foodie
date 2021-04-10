@@ -23,7 +23,15 @@ def get_location_router(app):
 
         if 'features' in res.json():
             for r in res.json()['features']:
+                forbidden = ['park', 'service', 'industrial']
+
+                if 'osm_value' in r['properties'] and r['properties']['osm_value'] in forbidden:
+                    continue
+
                 d = {}
+
+                if 'locality' in r['properties']:
+                    del r['properties']['locality']
 
                 if 'street' in r['properties']:
                     d['street'] = r['properties']['street']
@@ -47,7 +55,7 @@ def get_location_router(app):
                 else:
                     d['city'] = ''
 
-                if d['postcode'] and d['street']:
+                if d['street'] and d['postcode'] and d['city']:
                     data.add(' '.join([v for k, v in d.items()]).replace('  ', ' ').strip())
 
         return list(data)
