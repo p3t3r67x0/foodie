@@ -53,7 +53,8 @@ export default {
   build: {},
 
   publicRuntimeConfig: {
-    apiUrl: process.env.API_URL
+    apiUrl: process.env.API_URL,
+    geoUrl: process.env.GEO_URL
   },
 
   privateRuntimeConfig: {}

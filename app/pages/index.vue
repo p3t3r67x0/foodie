@@ -1,7 +1,8 @@
 <template>
 <div class="flex flex-col md:flex-row max-h-screen overflow-hidden">
-  <div class="relative flex-none md:flex-5 flex w-full md:w-7/12 lg:w-8/12 xl:w-10/12 h-96 md:h-screen">
-    <div id="map" class="flex-1"></div>
+  <div class="relative flex-none flex flex-wrap md:flex-5 w-full md:w-7/12 lg:w-8/12 xl:w-10/12 h-96 md:h-screen">
+    <location v-if="requestLocation" @emitLocation="preCheckInit" :requestLocation="requestLocation" />
+    <div id="map" ref="xxx" class="flex-none"></div>
   </div>
 
   <div class="flex-1 md:flex-5 w-full md:w-5/12 lg:w-4/12 xl:w-2/12 bg-gray-700 overflow-y-auto p-3">
@@ -9,11 +10,6 @@
       <span class="bg-pink-600 text-white font-medium px-1 mr-1">Foodie</span><span class="text-white font-black">fox</span>
     </h1>
     <p class="font-mono text-white mb-6">Discounter Lieferservice</p>
-
-    <form>
-      <label for="address" class="block text-white mb-1">Lieferadresse</label>
-      <input id="address" type="text" @input="submitAddress" class="w-full border-gray-200 focus:border-blue-500 border focus:border-outline-none rounded-sm p-1 text-gray-900">
-    </form>
 
     <div v-if="marketAddress" class="mt-8">
       <h4 class="flex justify-between text-white font-medium mb-3">
@@ -47,9 +43,11 @@ export default {
       orangeIcon: {},
       violetIcon: {},
       blueIcon: {},
+      hasLocation: false,
       marketAddress: '',
       marketsList: [],
       featureGroup: {},
+      requestLocation: true,
       violetIconOptions: {
         iconUrl: '/marker-icon-2x-violet.png',
         shadowUrl: '/marker-shadow.png',
@@ -111,12 +109,28 @@ export default {
       }
     }
   },
-  mounted() {
-    this.initMap()
-  },
   methods: {
-    initMap() {
-      this.map = this.$L.map('map').setView([53.570007, 10.0104954], 14)
+    preCheckInit(res) {
+      if (!this.checkObject(map)) {
+        this.requestLocation = false
+
+        this.initMap(res)
+      }
+    },
+    initMap(res) {
+      this.map = this.$L.map('map').setView([res['lat'], res['lng']], 18)
+
+      if (this.$refs.xxx.classList.contains('flex-none')) {
+        this.$refs.xxx.classList.remove('flex-none')
+        this.$refs.xxx.classList.add('flex-1')
+
+        this.$refs.xxx.style.height = `${this.$refs.xxx.clientHeight}px`
+        this.$refs.xxx.style.width = `${this.$refs.xxx.clientWidth * 2}px`
+
+        this.$refs.xxx.classList.remove('flex-1')
+
+        this.map.invalidateSize(false)
+      }
 
       this.tileLayer = this.$L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -133,7 +147,14 @@ export default {
       this.tileLayer.addTo(this.map)
       this.featureGroup = this.$L.featureGroup().addTo(this.map)
 
-      this.map.whenReady(this.getPosition)
+      const marker = this.$L.marker([res['lat'], res['lng']], {
+        title: 'Mein Standort',
+        icon: this.greenIcon
+      })
+
+      marker.addTo(this.featureGroup)
+
+      this.getMarkets(res)
     },
     addMarkers(res) {
       res.forEach((item, i) => {
@@ -173,34 +194,18 @@ export default {
     selectMarket(marketAddress) {
       this.marketAddress = marketAddress
     },
-    submitAddress(e) {
-      console.log(e.target.value)
+    checkObject(obj) {
+      return obj && Object.keys(obj).length === 0 && obj.constructor === Object
     },
-    getPosition() {
-      this.$geolocation.getCurrentPosition().then((pos) => {
-        const marker = this.$L.marker([pos.coords.latitude, pos.coords.longitude], {
-          title: 'Mein Standort',
-          icon: this.greenIcon
-        })
+    getMarkets(coords) {
+      const url = `${this.$config.apiUrl}/markets/${coords.lat}/${coords.lng}`
 
-        marker.addTo(this.featureGroup)
-
-        return pos.coords
-      }).then(coords => {
-        const url = `${this.$config.apiUrl}/markets/${coords.latitude}/${coords.longitude}`
-
-        this.$axios.$get(url).then(res => {
-          this.marketsList = res
-          this.addMarkers(res)
-        }).catch(err => {
-          alert(`axios error ${err.message}`)
-        })
-      }).catch((err) => {
-        alert(`geolocation accepted with error ${err.name}`)
+      this.$axios.$get(url).then(res => {
+        this.marketsList = res
+        this.addMarkers(res)
+      }).catch(err => {
+        alert(`axios error ${err.message}`)
       })
-    },
-    errorGeolocation(err) {
-      alert(`geolocation error ${err.code}, ${err.message}`)
     }
   }
 }

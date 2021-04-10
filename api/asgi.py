@@ -12,6 +12,7 @@ from config import settings
 from apps.user.auth import jwt_authentication
 from apps.user.models import User, UserCreate, UserUpdate, UserDB
 from apps.user.routers import get_users_router
+from apps.location.routers import get_location_router
 from apps.market.routers import get_market_router
 
 app = FastAPI()
@@ -44,8 +45,9 @@ async def configure_db_and_routes():
         UserDB,
     )
 
-    app.include_router(get_users_router(app), prefix='/account',)
-    app.include_router(get_market_router(app), prefix='/markets',)
+    app.include_router(get_users_router(app), prefix='/account')
+    app.include_router(get_location_router(app), prefix='/locations')
+    app.include_router(get_market_router(app), prefix='/markets')
 
 
 @app.on_event('shutdown')
