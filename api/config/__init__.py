@@ -24,7 +24,13 @@ class AuthSettings(BaseSettings):
 
 
 class Settings(CommonSettings, ServerSettings, DatabaseSettings, AuthSettings):
-    pass
+    PHOTON_URL: str
+    CORS_URL: str
+    APP_URL: str
+    API_URL: str
+
+    class Config:
+        env_file = '.env'
 
 
 settings = Settings()
