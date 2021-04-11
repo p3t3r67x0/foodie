@@ -1,8 +1,14 @@
 <template>
 <form @submit.prevent="checkFormValues" class="flex-1 flex flex-col justify-center items-center bg-gray-500">
   <fieldset class="max-w-xl sm:max-w-2xl w-full bg-custom-300 rounded-lg px-4 pt-8 pb-4">
-    <label for="address" class="block text-center text-5xl text-white mb-8">Wohin sollen wir liefern?</label>
-    <input ref="inputAddress" name="address" type="text" class="w-full text-xl border-gray-100 focus:border-pink-600 border focus:outline-none rounded-sm text-gray-700 p-2" placeholder="Elbuferstraße 72 21502 Geesthacht">
+    <label for="query" class="block text-center text-5xl text-white mb-8">Wohin sollen wir liefern?</label>
+    <div class="relative bg-blue-500">
+      <input ref="inputAddress" v-model="inputAddress" @keyup="retrieveSuggestions" name="query" type="text" class="w-full text-xl border-gray-100 focus:border-pink-600 border focus:outline-none rounded-sm text-gray-700 p-2"
+        placeholder="Elbuferstraße 72 21502 Geesthacht">
+      <ul v-if="suggestions.length > 0" class="bg-white absolute top-0 left-0 w-full h-56 overflow-y-auto mt-12">
+        <li v-for="suggestion of suggestions" @click="updateInputAddress(suggestion)" class="cursor-pointer hover:bg-blue-500 hover:text-white text-gray-700 p-3">{{ suggestion }}</li>
+      </ul>
+    </div>
   </fieldset>
 </form>
 </template>
@@ -11,15 +17,10 @@
 export default {
   data() {
     return {
+      suggestions: [],
+      inputAddress: null,
       tmpQueryString: null
     }
-  },
-  mounted() {
-    this.$refs.inputAddress.addEventListener('keyup', this.debounce((e) => {
-      if (e.keyCode !== 13) {
-        this.lookupAddress(e.target.value.trim().toLowerCase())
-      }
-    }, 800))
   },
   props: ['requestLocation'],
   methods: {
@@ -53,18 +54,20 @@ export default {
         })
       }
     },
-    debounce(callback, wait) {
-      let timeout
+    updateInputAddress(s) {
+      this.inputAddress = s
+      this.lookupAddress(s)
+    },
+    retrieveSuggestions(e) {
+      this.suggestions = []
 
-      return (...args) => {
-        if (args[0].target.value.match(/(.+)\s(\d+(\s*[^\d\s]+)*)\s([0-9]{5})\s([a-zA-Z]+)/)) {
-          clearTimeout(timeout)
+      const url = `${this.$config.apiUrl}/locations/${e.target.value}`
 
-          timeout = setTimeout(function() {
-            callback.apply(this, args)
-          }, wait)
-        }
-      }
+      this.$axios.$get(url).then(res => {
+        this.suggestions = res
+      }).catch(err => {
+        console.log(err.message)
+      })
     }
   }
 }
