@@ -1,8 +1,8 @@
 <template>
 <div class="flex flex-col md:flex-row max-h-screen overflow-hidden">
-  <div class="relative flex-none flex flex-wrap md:flex-5 w-full md:w-7/12 lg:w-8/12 xl:w-10/12 h-96 md:h-screen">
+  <div ref="leafletWrapper" class="relative flex-none flex flex-wrap md:flex-5 w-full md:w-7/12 lg:w-8/12 xl:w-10/12 h-96 md:h-screen">
     <location v-if="requestLocation" @emitLocation="preCheckInit" :requestLocation="requestLocation" />
-    <div id="map" ref="xxx" class="flex-none"></div>
+    <div id="map" ref="leafletContainer" class="flex-none"></div>
   </div>
 
   <div class="flex-1 md:flex-5 w-full md:w-5/12 lg:w-4/12 xl:w-2/12 bg-gray-700 overflow-y-auto p-3">
@@ -120,17 +120,24 @@ export default {
     initMap(res) {
       this.map = this.$L.map('map').setView([res['lat'], res['lng']], 18)
 
-      if (this.$refs.xxx.classList.contains('flex-none')) {
-        this.$refs.xxx.classList.remove('flex-none')
-        this.$refs.xxx.classList.add('flex-1')
+      if (this.$refs.leafletContainer.classList.contains('flex-none')) {
+        this.$refs.leafletContainer.classList.remove('flex-none')
+        this.$refs.leafletContainer.classList.add('flex-1')
 
-        this.$refs.xxx.style.height = `${this.$refs.xxx.clientHeight}px`
-        this.$refs.xxx.style.width = `${this.$refs.xxx.clientWidth * 2}px`
+        this.$refs.leafletContainer.style.height = `${this.$refs.leafletWrapper.clientHeight}px`
+        this.$refs.leafletContainer.style.width = `${this.$refs.leafletWrapper.clientWidth}px`
 
-        this.$refs.xxx.classList.remove('flex-1')
+        this.$refs.leafletContainer.classList.remove('flex-1')
 
         this.map.invalidateSize(false)
       }
+
+      window.addEventListener('resize', (e) => {
+        this.$refs.leafletContainer.style.height = `${this.$refs.leafletWrapper.clientHeight}px`
+        this.$refs.leafletContainer.style.width = `${this.$refs.leafletWrapper.clientWidth}px`
+
+        this.map.invalidateSize(false)
+      })
 
       this.tileLayer = this.$L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
